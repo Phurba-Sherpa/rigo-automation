@@ -1,0 +1,16 @@
+[Unit]
+Description=RigoHR login refresh before check-in
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/home/phurba/personal/rigo-automation/.venv/bin/python3 /home/phurba/personal/rigo-automation/daily_login.py
+User=phurba
+WorkingDirectory=/home/phurba/personal/rigo-automation
+StandardOutput=append:/home/phurba/personal/rigo-automation/login.log
+StandardError=append:/home/phurba/personal/rigo-automation/login.log
+TimeoutStartSec=60
+
+[Install]
+WantedBy=multi-user.target

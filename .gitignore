@@ -1,0 +1,9 @@
+credentials.json
+session.json
+
+.venv/
+__pycache__/
+*.pyc
+
+*.log
+debug_*.png

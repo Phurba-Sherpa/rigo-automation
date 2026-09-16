@@ -1,0 +1,16 @@
+[Unit]
+Description=Attendance check-in on boot
+After=network-online.target attendance-login.service
+Requires=attendance-login.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/home/phurba/personal/rigo-automation/.venv/bin/python3 /home/phurba/personal/rigo-automation/checkin.py
+User=phurba
+WorkingDirectory=/home/phurba/personal/rigo-automation
+StandardOutput=append:/home/phurba/personal/rigo-automation/checkin.log
+StandardError=append:/home/phurba/personal/rigo-automation/checkin.log
+
+[Install]
+WantedBy=multi-user.target

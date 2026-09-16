@@ -1,0 +1,21 @@
+[Unit]
+Description=Attendance check-out on shutdown
+DefaultDependencies=no
+Before=shutdown.target
+Requires=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/true
+ExecStop=/home/phurba/personal/rigo-automation/.venv/bin/python3 /home/phurba/personal/rigo-automation/checkout.py
+TimeoutStopSec=30
+User=phurba
+WorkingDirectory=/home/phurba/personal/rigo-automation
+StandardOutput=append:/home/phurba/personal/rigo-automation/checkout.log
+StandardError=append:/home/phurba/personal/rigo-automation/checkout.log
+
+[Install]
+WantedBy=multi-user.target
+
