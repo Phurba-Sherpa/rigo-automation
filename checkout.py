@@ -9,11 +9,11 @@ with open("credentials.json") as f:
 
 
 def do_login(page):
-    """Full login flow, reused as a fallback when session has expired."""
+    """Full login flow, used as a fallback when the session has expired by shutdown time."""
     page.goto("https://app.rigohr.com/login")
-    page.fill("#email-input", creds["email"])
-    page.click("#sign-btn")
-    page.get_by_role("button", name="Microsoft").click(timeout=15000)
+    page.fill('input[name="login"]', creds["email"])
+    page.get_by_role("button", name="Continue", exact=True).click()
+    page.get_by_role("button", name="Continue with Microsoft", exact=True).click(timeout=15000)
 
     password_field = page.locator("#i0118")
     try:
@@ -51,11 +51,10 @@ with sync_playwright() as p:
         page.goto("https://app.rigohr.com/hr/clock/out")
         page.wait_for_timeout(2000)
 
-        # Session-expiry check: if we're not actually on the clock page, re-login
         if "login" in page.url or "microsoftonline" in page.url:
             print(f"[{datetime.now()}] Session expired, logging in before checkout...")
             do_login(page)
-            context.storage_state(path="session.json")  # save fresh session immediately
+            context.storage_state(path="session.json")
             page.goto("https://app.rigohr.com/hr/clock/out")
             page.wait_for_timeout(2000)
 
@@ -65,6 +64,7 @@ with sync_playwright() as p:
 
         submit_button = page.locator('button[aria-label="CheckOut Submit Button"]')
         submit_button.wait_for(state="visible", timeout=10000)
+        print(f"[{datetime.now()}] Submit button visible. Enabled: {submit_button.is_enabled()}")
         submit_button.click(timeout=10000)
 
         page.wait_for_timeout(3000)
