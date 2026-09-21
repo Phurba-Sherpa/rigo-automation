@@ -62,7 +62,7 @@ with sync_playwright() as p:
         button.wait_for(timeout=15000)
         button.click()
 
-        submit_button = page.locator('button[aria-label="CheckOut Submit Button"]')
+        submit_button = page.get_by_role("button", name="Submit", exact=True)
         submit_button.wait_for(state="visible", timeout=10000)
         print(f"[{datetime.now()}] Submit button visible. Enabled: {submit_button.is_enabled()}")
         submit_button.click(timeout=10000)
