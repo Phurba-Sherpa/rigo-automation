@@ -32,6 +32,14 @@ def do_login(page):
     page.wait_for_url("https://app.rigohr.com/**", timeout=15000)
 
 
+def wait_for_app_loaded(page, timeout=30000):
+    """Wait for the RigoHR SPA to render past its splash screen, instead of a fixed delay."""
+    page.wait_for_selector(
+        'button:has-text("Clock Out"), button:has-text("Clock In")',
+        timeout=timeout,
+    )
+
+
 with sync_playwright() as p:
     browser = p.chromium.launch(headless=True)
     context = browser.new_context(storage_state="session.json")
@@ -49,14 +57,19 @@ with sync_playwright() as p:
 
     try:
         page.goto("https://app.rigohr.com/hr/clock/out")
-        page.wait_for_timeout(2000)
+
+        try:
+            wait_for_app_loaded(page)
+        except Exception:
+            page.screenshot(path="debug_checkout_stuck_loading.png", full_page=True)
+            raise Exception(f"Page never finished loading past splash screen. URL: {page.url}")
 
         if "login" in page.url or "microsoftonline" in page.url:
             print(f"[{datetime.now()}] Session expired, logging in before checkout...")
             do_login(page)
             context.storage_state(path="session.json")
             page.goto("https://app.rigohr.com/hr/clock/out")
-            page.wait_for_timeout(2000)
+            wait_for_app_loaded(page)
 
         button = page.get_by_role("button").filter(has_text="Clock Out")
         button.wait_for(timeout=15000)
