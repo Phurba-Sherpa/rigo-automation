@@ -1,7 +1,12 @@
 # checkin.py
-from playwright.sync_api import sync_playwright
-from datetime import datetime
 import sys
+from datetime import datetime
+
+from playwright.sync_api import sync_playwright
+
+from office_check import require_office_network
+
+require_office_network("check-in", retries=3, timeout_sec=2, retry_delay=2.0)
 
 with sync_playwright() as p:
     browser = p.chromium.launch(headless=True)
@@ -12,7 +17,9 @@ with sync_playwright() as p:
 
     def check_response(response):
         if "clock" in response.url.lower() and response.request.method == "POST":
-            print(f"[{datetime.now()}] Clock-in API response: {response.status} {response.url}")
+            print(
+                f"[{datetime.now()}] Clock-in API response: {response.status} {response.url}"
+            )
             if response.status < 400:
                 api_success["done"] = True
 
@@ -33,7 +40,9 @@ with sync_playwright() as p:
         is_enabled = submit_button.is_enabled()
         print(f"[{datetime.now()}] Submit button visible. Enabled: {is_enabled}")
 
-        submit_button.click(timeout=10000, force=False)  # force=False will error loudly if truly not clickable
+        submit_button.click(
+            timeout=10000, force=False
+        )  # force=False will error loudly if truly not clickable
 
         page.wait_for_timeout(3000)
 
@@ -41,7 +50,9 @@ with sync_playwright() as p:
             print(f"[{datetime.now()}] Checked in — confirmed via API response.")
         else:
             page.screenshot(path="debug_checkin_unconfirmed.png", full_page=True)
-            print(f"[{datetime.now()}] WARNING: clicked through, but no successful clock API response seen.")
+            print(
+                f"[{datetime.now()}] WARNING: clicked through, but no successful clock API response seen."
+            )
 
     except Exception as e:
         page.screenshot(path="debug_checkin_failure.png", full_page=True)

@@ -1,8 +1,13 @@
 # checkout.py
-from playwright.sync_api import sync_playwright
-from datetime import datetime
 import json
 import sys
+from datetime import datetime
+
+from playwright.sync_api import sync_playwright
+
+from office_check import require_office_network
+
+require_office_network("check-out", retries=1, timeout_sec=2)
 
 with open("credentials.json") as f:
     creds = json.load(f)
@@ -13,7 +18,9 @@ def do_login(page):
     page.goto("https://app.rigohr.com/login")
     page.fill('input[name="login"]', creds["email"])
     page.get_by_role("button", name="Continue", exact=True).click()
-    page.get_by_role("button", name="Continue with Microsoft", exact=True).click(timeout=15000)
+    page.get_by_role("button", name="Continue with Microsoft", exact=True).click(
+        timeout=15000
+    )
 
     password_field = page.locator("#i0118")
     try:
@@ -49,7 +56,9 @@ with sync_playwright() as p:
 
     def check_response(response):
         if "clock" in response.url.lower() and response.request.method == "POST":
-            print(f"[{datetime.now()}] Clock-out API response: {response.status} {response.url}")
+            print(
+                f"[{datetime.now()}] Clock-out API response: {response.status} {response.url}"
+            )
             if response.status < 400:
                 api_success["done"] = True
 
@@ -62,7 +71,9 @@ with sync_playwright() as p:
             wait_for_app_loaded(page)
         except Exception:
             page.screenshot(path="debug_checkout_stuck_loading.png", full_page=True)
-            raise Exception(f"Page never finished loading past splash screen. URL: {page.url}")
+            raise Exception(
+                f"Page never finished loading past splash screen. URL: {page.url}"
+            )
 
         if "login" in page.url or "microsoftonline" in page.url:
             print(f"[{datetime.now()}] Session expired, logging in before checkout...")
@@ -77,7 +88,9 @@ with sync_playwright() as p:
 
         submit_button = page.get_by_role("button", name="Submit", exact=True)
         submit_button.wait_for(state="visible", timeout=10000)
-        print(f"[{datetime.now()}] Submit button visible. Enabled: {submit_button.is_enabled()}")
+        print(
+            f"[{datetime.now()}] Submit button visible. Enabled: {submit_button.is_enabled()}"
+        )
         submit_button.click(timeout=10000)
 
         page.wait_for_timeout(3000)
@@ -86,7 +99,9 @@ with sync_playwright() as p:
             print(f"[{datetime.now()}] Checked out — confirmed via API response.")
         else:
             page.screenshot(path="debug_checkout_unconfirmed.png", full_page=True)
-            print(f"[{datetime.now()}] WARNING: clicked through, but no successful clock API response seen.")
+            print(
+                f"[{datetime.now()}] WARNING: clicked through, but no successful clock API response seen."
+            )
 
     except Exception as e:
         page.screenshot(path="debug_checkout_failure.png", full_page=True)

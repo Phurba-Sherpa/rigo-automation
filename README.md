@@ -19,10 +19,11 @@ Automatically logs in, clocks you **in** when your laptop boots, and clocks you 
 
 - RigoHR login goes through Microsoft SSO, so a real (headless) browser drives the login — not a simple API call.
 - A **login** step runs first to get a fresh session, since RigoHR sessions are short-lived.
+- **Office network guard (`techkraftinc.net`)**: Both `checkin.py` and `checkout.py` ping `techkraftinc.net` before starting the browser. If unreachable (e.g., when booting or shutting down at home), they log a skip message and exit cleanly without clocking in or out.
 - **Check-in** then clicks "Clock In" and confirms it.
 - **Check-out** clicks "Clock Out" and confirms it — and if the session has already expired by the time you shut down, it logs in again automatically before retrying.
-- On **boot**: login runs first, and check-in only runs if login succeeded.
-- On **shutdown**: check-out runs automatically (with its own session-refresh built in).
+- On **boot**: login runs first, and check-in only runs if login succeeded (and `techkraftinc.net` is reachable).
+- On **shutdown**: check-out runs automatically if `techkraftinc.net` is reachable (with its own session-refresh built in).
 
 ---
 
@@ -77,8 +78,10 @@ Useful for testing, or if you ever need to trigger something outside the normal 
 
 ```bash
 uv run python daily_login.py     # refresh the login session
-uv run python checkin.py         # clock in
-uv run python checkout.py        # clock out
+uv run python checkin.py         # clock in (requires office network)
+uv run python checkout.py        # clock out (requires office network)
+uv run python checkin.py --force   # bypass office network check
+uv run python checkout.py --force  # bypass office network check
 ```
 
 > **Always run `daily_login.py` first before a manual `checkin.py` or `checkout.py`.** RigoHR sessions are short-lived, so a session saved earlier in the day may already be dead by the time you manually trigger a check-in/out later — logging in fresh right beforehand avoids a failed run.
